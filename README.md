@@ -49,8 +49,8 @@ reprodukovatelně.
 kořen repa. QR kódy se generují proti produkční doméně projektu automaticky;
 na vlastní doméně nastav env `BASE_URL` a přegeneruj.
 
-Repo: `Prvni-pozice/ar-muzeum`, SSH alias `github-ar-muzeum`
-(deploy key `~/.ssh/id_ar_muzeum` na VPS). Push do `master` = deploy.
+Repo: `Prvni-pozice/ar-museum`, SSH alias `github-ar-museum`
+(deploy key `~/.ssh/id_ar_museum` na VPS). Push do `master` = deploy.
 
 AR funguje jen přes **HTTPS na skutečném telefonu** (WebXR / Scene Viewer /
 Quick Look). Na localhostu si model prohlédneš, ale tlačítko AR nenaskočí.

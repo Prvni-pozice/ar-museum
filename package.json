@@ -1,5 +1,5 @@
 {
-  "name": "ar-muzeum",
+  "name": "ar-museum",
   "version": "1.0.0",
   "description": "AR prohlížeč historických exponátů s QR deep-linkingem",
   "scripts": {
