@@ -11,7 +11,9 @@
     "model": "models/antique_estoc.glb",
     "authors": "James Ray Cock, Ulan Cabanilla",
     "source": "Poly Haven (CC0)",
-    "sourceUrl": "https://polyhaven.com/a/antique_estoc"
+    "sourceUrl": "https://polyhaven.com/a/antique_estoc",
+    "orientation": "0deg 90deg 0deg",
+    "zoom": 1.45
   },
   {
     "key": "katana",
@@ -25,7 +27,9 @@
     "model": "models/antique_katana_01.glb",
     "authors": "Tal Swicegood",
     "source": "Poly Haven (CC0)",
-    "sourceUrl": "https://polyhaven.com/a/antique_katana_01"
+    "sourceUrl": "https://polyhaven.com/a/antique_katana_01",
+    "orientation": "0deg 90deg 0deg",
+    "zoom": 1.45
   },
   {
     "key": "delo",
@@ -39,6 +43,7 @@
     "model": "models/cannon_01.glb",
     "authors": "Yann Kervran, James Ray Cock",
     "source": "Poly Haven (CC0)",
-    "sourceUrl": "https://polyhaven.com/a/cannon_01"
+    "sourceUrl": "https://polyhaven.com/a/cannon_01",
+    "zoom": 1.05
   }
 ]

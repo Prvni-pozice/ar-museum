@@ -249,7 +249,7 @@
       ar-modes="webxr scene-viewer quick-look"
       ar-placement="floor"
       camera-controls
-      touch-action="pan-y"
+      touch-action="none"
       shadow-intensity="1.1"
       shadow-softness="0.7"
       exposure="1.05"
@@ -280,11 +280,13 @@
     const metaEl = document.getElementById('meta');
     const arBtn = document.getElementById('arBtn');
     const resetBtn = document.getElementById('resetBtn');
-    const ORBIT = '-25deg 72deg auto';
+    const ANGLE = '-25deg 72deg';
 
     let exhibits = [];
+    let current = null;
 
     function render(ex) {
+      current = ex;
       for (const e of exhibits) e.btn.classList.toggle('active', e === ex);
 
       document.getElementById('infoId').textContent = `${ex.kind} · ${ex.period}`;
@@ -311,8 +313,12 @@
 
       viewer.setAttribute('src', ex.model);
       viewer.setAttribute('alt', ex.title);
-      viewer.cameraOrbit = ORBIT;
-      viewer.fieldOfView = 'auto';
+      // Podlouhlé kusy (meče) jsou naskenované nastojato a svisle se nevejdou
+      // do záběru — položíme je, ať se kolem nich dá kroužit jako kolem děla.
+      if (ex.orientation) viewer.setAttribute('orientation', ex.orientation);
+      else viewer.removeAttribute('orientation');
+      // Orbit se nastavuje až v 'load' — poloměr v % se počítá ze zarámování,
+      // které model-viewer zná teprve po načtení modelu.
 
       // ať jde odkaz na konkrétní kus sdílet i po přepnutí ve stránce
       history.replaceState(null, '', `?e=${ex.key}`);
@@ -333,15 +339,29 @@
       render(exhibits.find(e => e.key === wanted) || exhibits[0]);
     })();
 
+    // Automatické zarámování cpe podlouhlé předměty až k okraji, takže při
+    // naklopení vylezou ze záběru. Vezmeme si tedy spočítaný poloměr a
+    // odsuneme kameru o `zoom` dál — v procentech to model-viewer počítá
+    // z jiného základu a vyjde stejně jako auto.
+    async function frame() {
+      if (!current) return;
+      viewer.setAttribute('camera-orbit', `${ANGLE} auto`);
+      viewer.setAttribute('field-of-view', 'auto');
+      if (viewer.updateFraming) await viewer.updateFraming();
+      const r = viewer.getCameraOrbit().radius * (current.zoom || 1);
+      // výchozí strop oddálení = přesně automatické zarámování, dál kamera nesmí
+      viewer.setAttribute('max-camera-orbit', `auto auto ${(r * 2).toFixed(2)}m`);
+      viewer.setAttribute('camera-orbit', `${ANGLE} ${r.toFixed(2)}m`);
+    }
+
+    viewer.addEventListener('load', frame);
+
     arBtn.addEventListener('click', () => {
       if (viewer.canActivateAR) viewer.activateAR();
       else alert('AR tenhle prohlížeč nepodporuje. Otevři stránku v Safari (iOS) nebo Chrome (Android) na telefonu.');
     });
 
-    resetBtn.addEventListener('click', () => {
-      viewer.cameraOrbit = ORBIT;
-      viewer.fieldOfView = 'auto';
-    });
+    resetBtn.addEventListener('click', frame);
 
     // Skeny jsou v metrech, takže se v AR postaví ve skutečné velikosti —
     // nic se nepřeškálovává (na rozdíl od aut v projektu 3d-web).
