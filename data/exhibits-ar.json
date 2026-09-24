@@ -1,0 +1,44 @@
+[
+  {
+    "key": "estoc",
+    "label": "Estoc",
+    "title": "Estoc",
+    "period": "14.–16. století, Evropa",
+    "kind": "Chladná zbraň",
+    "description": "Bodný meč s dlouhou tuhou čepelí bez ostří. Nebyl určený k seku — hrot měl probodnout kroužkovou zbroj nebo najít spáru v plátové. Jezdci ho nosili připnutý u sedla jako druhou zbraň vedle meče.",
+    "material": "Ocel, dřevo, kůže",
+    "length_cm": 149,
+    "model": "models/antique_estoc.glb",
+    "authors": "James Ray Cock, Ulan Cabanilla",
+    "source": "Poly Haven (CC0)",
+    "sourceUrl": "https://polyhaven.com/a/antique_estoc"
+  },
+  {
+    "key": "katana",
+    "label": "Katana",
+    "title": "Katana",
+    "period": "od 14. století, Japonsko",
+    "kind": "Chladná zbraň",
+    "description": "Japonský jednosečný meč se zakřivenou čepelí. Podoba se ustálila v období Muromači. Čepel se kovala ze skládané oceli — měkké jádro drží ráz, tvrdé ostří drží ostrost.",
+    "material": "Skládaná ocel, dřevo, ray skin",
+    "length_cm": 100,
+    "model": "models/antique_katana_01.glb",
+    "authors": "Tal Swicegood",
+    "source": "Poly Haven (CC0)",
+    "sourceUrl": "https://polyhaven.com/a/antique_katana_01"
+  },
+  {
+    "key": "delo",
+    "label": "Dělo",
+    "title": "Dělo — předovka",
+    "period": "17.–18. století",
+    "kind": "Palná zbraň",
+    "description": "Hlavňová předovka na černý prach na dřevěné lafetě. Nabíjelo se ústím: prach, ucpávka, koule. Stejný typ sloužil na palubách lodí i v pevnostních baštách.",
+    "material": "Litina, dubové dřevo, kované okování",
+    "length_cm": 230,
+    "model": "models/cannon_01.glb",
+    "authors": "Yann Kervran, James Ray Cock",
+    "source": "Poly Haven (CC0)",
+    "sourceUrl": "https://polyhaven.com/a/cannon_01"
+  }
+]

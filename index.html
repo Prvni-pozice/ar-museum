@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>AR Muzeum — archeologie Vysočiny</title>
+  <title>AR Muzeum — historické nástroje a zbraně</title>
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 
@@ -119,45 +119,6 @@
     }
     model-viewer[hidden] { display: none; }
 
-    /* zástup, dokud model není k dispozici */
-    .fallback {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      padding: 80px 22px 140px;
-      text-align: center;
-    }
-    .fallback.show { display: flex; }
-    .fallback img {
-      max-width: min(360px, 70vw);
-      max-height: 42vh;
-      object-fit: contain;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      padding: 10px;
-    }
-    .fallback-note {
-      max-width: 440px;
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--mute);
-    }
-    .fallback-note b { color: var(--warn); font-weight: 600; }
-    .fallback-tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--warn);
-      border: 1px solid var(--warn);
-      padding: 4px 10px;
-    }
-
     .info {
       position: fixed;
       left: 22px;
@@ -185,6 +146,12 @@
       font-size: 26px;
       letter-spacing: 0.03em;
       line-height: 1.05;
+      margin-bottom: 14px;
+    }
+    .info-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cfc5b6;
       margin-bottom: 14px;
     }
     .info-specs { list-style: none; }
@@ -268,7 +235,7 @@
       <div class="brand-mark"></div>
       <div>
         <div class="brand-name">AR MUZEUM</div>
-        <div class="brand-tag">Archeologie Vysočiny</div>
+        <div class="brand-tag">Nástroje a zbraně</div>
       </div>
     </div>
     <div class="model-switch" id="switch" role="tablist" aria-label="Výběr exponátu"></div>
@@ -292,17 +259,12 @@
     ></model-viewer>
   </main>
 
-  <div class="fallback" id="fallback">
-    <span class="fallback-tag">3D model zatím nedostupný</span>
-    <img id="fallbackImg" alt="" />
-    <p class="fallback-note" id="fallbackNote"></p>
-  </div>
-
   <aside class="info">
     <span class="info-id" id="infoId">—</span>
     <h2 class="info-title" id="infoTitle">—</h2>
+    <p class="info-desc" id="infoDesc"></p>
     <ul class="info-specs" id="infoSpecs"></ul>
-    <a class="info-src" id="infoSrc" target="_blank" rel="noopener">Záznam v Krameriu →</a>
+    <a class="info-src" id="infoSrc" target="_blank" rel="noopener">Zdroj modelu →</a>
   </aside>
 
   <div class="controls">
@@ -311,116 +273,65 @@
   </div>
 
   <script>
-    // Tři vybrané exponáty z 60 kusů 3D digitalizované archeologické podsbírky
-    // Muzea Vysočiny Jihlava. Kompletní seznam je v data/exhibits.json.
-    // `model` ukazuje na soubor v models/ — dokud tam není, ukáže se náhled.
-    const EXHIBITS = [
-      {
-        key: 'sekeromlat',
-        label: 'Sekeromlat',
-        title: 'Sekeromlat',
-        pid: 'uuid:7f90deef-0766-4d16-8804-e6de7888cd9b',
-        inventory: 'J08/B/16541',
-        period: 'Neolit',
-        model: 'models/7f90deef.glb',
-        thumb: 'data/thumbs/7f90deef.jpg',
-      },
-      {
-        key: 'konicek',
-        label: 'Koníček',
-        title: 'Koníček – hračka',
-        pid: 'uuid:9c0bfe24-c640-4c5c-a8e2-79359f9d2f71',
-        inventory: 'J08/B/16500',
-        period: 'Středověk',
-        model: 'models/9c0bfe24.glb',
-        thumb: 'data/thumbs/9c0bfe24.jpg',
-      },
-      {
-        key: 'dlazdice',
-        label: 'Dlaždice',
-        title: 'Dlaždice – Samson a lev',
-        pid: 'uuid:7b3a1305-c7de-43fd-88a6-5b8255f75ae6',
-        inventory: 'J08/B/16520',
-        period: 'Středověk',
-        model: 'models/7b3a1305.glb',
-        thumb: 'data/thumbs/7b3a1305.jpg',
-      },
-    ];
-
-    const KRAMERIUS = 'https://kramerius.kkvysociny.cz/view/';
+    // Exponáty a jejich popisky žijí v data/exhibits-ar.json, ať se dají měnit
+    // bez sahání do stránky. QR kód míří na ?e=<key> a otevře rovnou ten kus.
     const viewer = document.getElementById('viewer');
-    const fallback = document.getElementById('fallback');
-    const fallbackImg = document.getElementById('fallbackImg');
-    const fallbackNote = document.getElementById('fallbackNote');
     const switchEl = document.getElementById('switch');
+    const metaEl = document.getElementById('meta');
     const arBtn = document.getElementById('arBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const ORBIT = '-25deg 72deg auto';
 
-    let current = EXHIBITS[0];
+    let exhibits = [];
 
-    for (const ex of EXHIBITS) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = ex.label;
-      b.addEventListener('click', () => show(ex));
-      switchEl.appendChild(b);
-      ex.btn = b;
-    }
+    function render(ex) {
+      for (const e of exhibits) e.btn.classList.toggle('active', e === ex);
 
-    // Model se nahraje jen když soubor existuje — jinak zůstane náhled.
-    async function hasModel(url) {
-      try {
-        const r = await fetch(url, { method: 'HEAD' });
-        return r.ok;
-      } catch { return false; }
-    }
-
-    async function show(ex) {
-      current = ex;
-      for (const e of EXHIBITS) e.btn.classList.toggle('active', e === ex);
-
-      document.getElementById('infoId').textContent = `${ex.period} · ${ex.inventory}`;
+      document.getElementById('infoId').textContent = `${ex.kind} · ${ex.period}`;
       document.getElementById('infoTitle').textContent = ex.title;
-      const specs = [
-        ['Období', ex.period],
-        ['Inventární č.', ex.inventory],
-        ['Instituce', 'Muzeum Vysočiny Jihlava'],
-        ['Digitalizace', 'NPO 3, 3D sken'],
-      ];
+      document.getElementById('infoDesc').textContent = ex.description;
+
       const ul = document.getElementById('infoSpecs');
       ul.replaceChildren();
-      for (const [k, v] of specs) {
+      for (const [k, v] of [
+        ['Datace', ex.period],
+        ['Materiál', ex.material],
+        ['Délka', `${ex.length_cm} cm`],
+        ['Autoři skenu', ex.authors],
+      ]) {
         const li = document.createElement('li');
         const ks = document.createElement('span'); ks.className = 'k'; ks.textContent = k;
         const vs = document.createElement('span'); vs.className = 'v'; vs.textContent = v;
         li.append(ks, vs);
         ul.appendChild(li);
       }
-      document.getElementById('infoSrc').href = KRAMERIUS + ex.pid;
+      const src = document.getElementById('infoSrc');
+      src.href = ex.sourceUrl;
+      src.textContent = `${ex.source} →`;
 
-      const ok = await hasModel(ex.model);
-      viewer.hidden = !ok;
-      fallback.classList.toggle('show', !ok);
-      arBtn.disabled = !ok;
-      resetBtn.disabled = !ok;
-      document.getElementById('meta').textContent = ok ? 'Model načten' : 'Jen náhled';
+      viewer.setAttribute('src', ex.model);
+      viewer.setAttribute('alt', ex.title);
+      viewer.cameraOrbit = ORBIT;
+      viewer.fieldOfView = 'auto';
 
-      if (ok) {
-        viewer.setAttribute('src', ex.model);
-        viewer.setAttribute('alt', ex.title);
-        viewer.cameraOrbit = '-25deg 72deg auto';
-        viewer.fieldOfView = 'auto';
-      } else {
-        viewer.removeAttribute('src');
-        fallbackImg.src = ex.thumb;
-        fallbackImg.alt = ex.title;
-        fallbackNote.innerHTML =
-          'Kramerius kraje Vysočina vydává u tohoto předmětu jen náhled. '
-          + 'Samotný 3D digitalizát je pod licencí <b>kkvhb_sbirka_mvji_jie301</b> '
-          + 'a anonymní stažení vrací 403 — je potřeba přístup od Muzea Vysočiny Jihlava. '
-          + 'Jakmile model bude v <b>models/</b>, stránka ho načte sama.';
-      }
+      // ať jde odkaz na konkrétní kus sdílet i po přepnutí ve stránce
+      history.replaceState(null, '', `?e=${ex.key}`);
+      metaEl.textContent = `${ex.length_cm} cm · skutečná velikost`;
     }
+
+    (async () => {
+      exhibits = await (await fetch('data/exhibits-ar.json')).json();
+      for (const ex of exhibits) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = ex.label;
+        b.addEventListener('click', () => render(ex));
+        switchEl.appendChild(b);
+        ex.btn = b;
+      }
+      const wanted = new URLSearchParams(location.search).get('e');
+      render(exhibits.find(e => e.key === wanted) || exhibits[0]);
+    })();
 
     arBtn.addEventListener('click', () => {
       if (viewer.canActivateAR) viewer.activateAR();
@@ -428,13 +339,12 @@
     });
 
     resetBtn.addEventListener('click', () => {
-      viewer.cameraOrbit = '-25deg 72deg auto';
+      viewer.cameraOrbit = ORBIT;
       viewer.fieldOfView = 'auto';
     });
 
-    // Archeologické předměty se v AR ukazují ve skutečné velikosti —
-    // sken je v metrech, takže se nic nepřeškáluje (na rozdíl od aut).
-    show(EXHIBITS[0]);
+    // Skeny jsou v metrech, takže se v AR postaví ve skutečné velikosti —
+    // nic se nepřeškálovává (na rozdíl od aut v projektu 3d-web).
   </script>
 </body>
 </html>

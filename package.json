@@ -1,0 +1,19 @@
+{
+  "name": "ar-muzeum",
+  "version": "1.0.0",
+  "description": "AR prohlížeč historických exponátů s QR deep-linkingem",
+  "scripts": {
+    "dev": "python3 -m http.server 5199",
+    "models": "node scripts/fetch-models.mjs",
+    "qr": "node scripts/make-qr.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "gltf-pipeline": "^4.3.1",
+    "qrcode": "^1.5.4"
+  },
+  "private": "true"
+}

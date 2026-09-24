@@ -13,3 +13,6 @@ credentials.json
 node_modules/
 *.log
 .DS_Store
+qr/
+qr.html
+tmp-models/
