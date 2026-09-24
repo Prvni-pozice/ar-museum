@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>AR Muzeum — archeologie Vysočiny</title>
+
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0d0b09;
+      --panel: #221d18;
+      --line: #3a322a;
+      --ink: #f5f1ea;
+      --mute: #9a8f80;
+      --accent: #d9a441;
+      --warn: #e2703a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Manrope', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 22px;
+      backdrop-filter: blur(8px);
+      background: rgba(13, 11, 9, 0.7);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+    }
+    .brand-name {
+      font-family: 'Anton', sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.18em;
+      line-height: 1.05;
+    }
+    .brand-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .topbar-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--mute);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .model-switch {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      background: rgba(34, 29, 24, 0.85);
+      overflow: hidden;
+    }
+    .model-switch button {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      background: transparent;
+      color: var(--mute);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .model-switch button + button { border-left: 1px solid var(--line); }
+    .model-switch button:hover { color: var(--ink); }
+    .model-switch button.active {
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .viewer-wrap { position: fixed; inset: 0; z-index: 1; }
+    model-viewer {
+      width: 100%; height: 100%;
+      background: transparent;
+      --poster-color: transparent;
+    }
+    model-viewer[hidden] { display: none; }
+
+    /* zástup, dokud model není k dispozici */
+    .fallback {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 80px 22px 140px;
+      text-align: center;
+    }
+    .fallback.show { display: flex; }
+    .fallback img {
+      max-width: min(360px, 70vw);
+      max-height: 42vh;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 10px;
+    }
+    .fallback-note {
+      max-width: 440px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--mute);
+    }
+    .fallback-note b { color: var(--warn); font-weight: 600; }
+    .fallback-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--warn);
+      border: 1px solid var(--warn);
+      padding: 4px 10px;
+    }
+
+    .info {
+      position: fixed;
+      left: 22px;
+      bottom: 22px;
+      z-index: 5;
+      width: min(360px, calc(100vw - 44px));
+      background: rgba(34, 29, 24, 0.94);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      padding: 18px 20px 20px;
+    }
+    .info-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      display: block;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .info-title {
+      font-family: 'Anton', sans-serif;
+      font-size: 26px;
+      letter-spacing: 0.03em;
+      line-height: 1.05;
+      margin-bottom: 14px;
+    }
+    .info-specs { list-style: none; }
+    .info-specs li {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px dashed rgba(255,255,255,0.05);
+    }
+    .info-specs li:last-child { border-bottom: none; }
+    .info-specs .k {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--mute);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .info-specs .v { font-weight: 600; text-align: right; }
+    .info-src {
+      display: block;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--mute);
+      text-decoration: none;
+    }
+    .info-src:hover { color: var(--accent); }
+
+    .controls {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ctl-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 12px 18px;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ctl-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .ctl-btn.primary {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .ctl-btn.primary:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+    .ctl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    @media (max-width: 700px) {
+      .topbar { flex-wrap: wrap; padding: 10px 12px; }
+      .topbar-meta { display: none; }
+      .info { left: 12px; right: 12px; bottom: 12px; width: auto; padding: 14px 16px 16px; }
+      .info-title { font-size: 21px; }
+      .controls { bottom: auto; top: 96px; right: 12px; flex-direction: row; }
+      .ctl-btn { padding: 10px 13px; font-size: 10px; }
+      .model-switch button { padding: 7px 9px; font-size: 10px; letter-spacing: 0.1em; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">AR MUZEUM</div>
+        <div class="brand-tag">Archeologie Vysočiny</div>
+      </div>
+    </div>
+    <div class="model-switch" id="switch" role="tablist" aria-label="Výběr exponátu"></div>
+    <div class="topbar-meta" id="meta">—</div>
+  </header>
+
+  <main class="viewer-wrap">
+    <model-viewer
+      id="viewer"
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      ar-placement="floor"
+      camera-controls
+      touch-action="pan-y"
+      shadow-intensity="1.1"
+      shadow-softness="0.7"
+      exposure="1.05"
+      environment-image="neutral"
+      camera-orbit="-25deg 72deg auto"
+      interaction-prompt="auto"
+    ></model-viewer>
+  </main>
+
+  <div class="fallback" id="fallback">
+    <span class="fallback-tag">3D model zatím nedostupný</span>
+    <img id="fallbackImg" alt="" />
+    <p class="fallback-note" id="fallbackNote"></p>
+  </div>
+
+  <aside class="info">
+    <span class="info-id" id="infoId">—</span>
+    <h2 class="info-title" id="infoTitle">—</h2>
+    <ul class="info-specs" id="infoSpecs"></ul>
+    <a class="info-src" id="infoSrc" target="_blank" rel="noopener">Záznam v Krameriu →</a>
+  </aside>
+
+  <div class="controls">
+    <button class="ctl-btn" id="resetBtn">Reset pohledu</button>
+    <button class="ctl-btn primary" id="arBtn">Spustit AR</button>
+  </div>
+
+  <script>
+    // Tři vybrané exponáty z 60 kusů 3D digitalizované archeologické podsbírky
+    // Muzea Vysočiny Jihlava. Kompletní seznam je v data/exhibits.json.
+    // `model` ukazuje na soubor v models/ — dokud tam není, ukáže se náhled.
+    const EXHIBITS = [
+      {
+        key: 'sekeromlat',
+        label: 'Sekeromlat',
+        title: 'Sekeromlat',
+        pid: 'uuid:7f90deef-0766-4d16-8804-e6de7888cd9b',
+        inventory: 'J08/B/16541',
+        period: 'Neolit',
+        model: 'models/7f90deef.glb',
+        thumb: 'data/thumbs/7f90deef.jpg',
+      },
+      {
+        key: 'konicek',
+        label: 'Koníček',
+        title: 'Koníček – hračka',
+        pid: 'uuid:9c0bfe24-c640-4c5c-a8e2-79359f9d2f71',
+        inventory: 'J08/B/16500',
+        period: 'Středověk',
+        model: 'models/9c0bfe24.glb',
+        thumb: 'data/thumbs/9c0bfe24.jpg',
+      },
+      {
+        key: 'dlazdice',
+        label: 'Dlaždice',
+        title: 'Dlaždice – Samson a lev',
+        pid: 'uuid:7b3a1305-c7de-43fd-88a6-5b8255f75ae6',
+        inventory: 'J08/B/16520',
+        period: 'Středověk',
+        model: 'models/7b3a1305.glb',
+        thumb: 'data/thumbs/7b3a1305.jpg',
+      },
+    ];
+
+    const KRAMERIUS = 'https://kramerius.kkvysociny.cz/view/';
+    const viewer = document.getElementById('viewer');
+    const fallback = document.getElementById('fallback');
+    const fallbackImg = document.getElementById('fallbackImg');
+    const fallbackNote = document.getElementById('fallbackNote');
+    const switchEl = document.getElementById('switch');
+    const arBtn = document.getElementById('arBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let current = EXHIBITS[0];
+
+    for (const ex of EXHIBITS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = ex.label;
+      b.addEventListener('click', () => show(ex));
+      switchEl.appendChild(b);
+      ex.btn = b;
+    }
+
+    // Model se nahraje jen když soubor existuje — jinak zůstane náhled.
+    async function hasModel(url) {
+      try {
+        const r = await fetch(url, { method: 'HEAD' });
+        return r.ok;
+      } catch { return false; }
+    }
+
+    async function show(ex) {
+      current = ex;
+      for (const e of EXHIBITS) e.btn.classList.toggle('active', e === ex);
+
+      document.getElementById('infoId').textContent = `${ex.period} · ${ex.inventory}`;
+      document.getElementById('infoTitle').textContent = ex.title;
+      const specs = [
+        ['Období', ex.period],
+        ['Inventární č.', ex.inventory],
+        ['Instituce', 'Muzeum Vysočiny Jihlava'],
+        ['Digitalizace', 'NPO 3, 3D sken'],
+      ];
+      const ul = document.getElementById('infoSpecs');
+      ul.replaceChildren();
+      for (const [k, v] of specs) {
+        const li = document.createElement('li');
+        const ks = document.createElement('span'); ks.className = 'k'; ks.textContent = k;
+        const vs = document.createElement('span'); vs.className = 'v'; vs.textContent = v;
+        li.append(ks, vs);
+        ul.appendChild(li);
+      }
+      document.getElementById('infoSrc').href = KRAMERIUS + ex.pid;
+
+      const ok = await hasModel(ex.model);
+      viewer.hidden = !ok;
+      fallback.classList.toggle('show', !ok);
+      arBtn.disabled = !ok;
+      resetBtn.disabled = !ok;
+      document.getElementById('meta').textContent = ok ? 'Model načten' : 'Jen náhled';
+
+      if (ok) {
+        viewer.setAttribute('src', ex.model);
+        viewer.setAttribute('alt', ex.title);
+        viewer.cameraOrbit = '-25deg 72deg auto';
+        viewer.fieldOfView = 'auto';
+      } else {
+        viewer.removeAttribute('src');
+        fallbackImg.src = ex.thumb;
+        fallbackImg.alt = ex.title;
+        fallbackNote.innerHTML =
+          'Kramerius kraje Vysočina vydává u tohoto předmětu jen náhled. '
+          + 'Samotný 3D digitalizát je pod licencí <b>kkvhb_sbirka_mvji_jie301</b> '
+          + 'a anonymní stažení vrací 403 — je potřeba přístup od Muzea Vysočiny Jihlava. '
+          + 'Jakmile model bude v <b>models/</b>, stránka ho načte sama.';
+      }
+    }
+
+    arBtn.addEventListener('click', () => {
+      if (viewer.canActivateAR) viewer.activateAR();
+      else alert('AR tenhle prohlížeč nepodporuje. Otevři stránku v Safari (iOS) nebo Chrome (Android) na telefonu.');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      viewer.cameraOrbit = '-25deg 72deg auto';
+      viewer.fieldOfView = 'auto';
+    });
+
+    // Archeologické předměty se v AR ukazují ve skutečné velikosti —
+    // sken je v metrech, takže se nic nepřeškáluje (na rozdíl od aut).
+    show(EXHIBITS[0]);
+  </script>
+</body>
+</html>

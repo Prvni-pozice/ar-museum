@@ -1,0 +1,15 @@
+# stažený obsah muzea — licencovaný, neredistribuujeme ho přes git
+models/
+data/thumbs/
+
+# creds
+.env
+.env.*
+*.local
+secrets.json
+credentials.json
+
+# ostatní
+node_modules/
+*.log
+.DS_Store
