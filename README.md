@@ -41,7 +41,16 @@ npm run dev        # http://<server>:5199
 ```
 
 `models/` je gitignorované — binárky do repa nepatří, skript je stáhne
-reprodukovatelně. Na hostingu je potřeba `npm run models` jako build krok.
+reprodukovatelně.
+
+## Nasazení (Vercel)
+
+`vercel.json` pouští `npm run models && npm run qr` jako build a servíruje
+kořen repa. QR kódy se generují proti produkční doméně projektu automaticky;
+na vlastní doméně nastav env `BASE_URL` a přegeneruj.
+
+Repo: `Prvni-pozice/ar-muzeum`, SSH alias `github-ar-muzeum`
+(deploy key `~/.ssh/id_ar_muzeum` na VPS). Push do `master` = deploy.
 
 AR funguje jen přes **HTTPS na skutečném telefonu** (WebXR / Scene Viewer /
 Quick Look). Na localhostu si model prohlédneš, ale tlačítko AR nenaskočí.

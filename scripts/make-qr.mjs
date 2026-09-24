@@ -2,10 +2,13 @@
 // který se dá vytisknout a položit k vitríně.
 // Základ URL se liší podle toho, kde appka běží:
 //   BASE_URL=https://ar.example.cz node scripts/make-qr.mjs
+// Na Vercelu se bez BASE_URL vezme produkční doména projektu.
 import fs from 'node:fs'
 import QRCode from 'qrcode'
 
-const BASE = (process.env.BASE_URL || 'http://localhost:5199').replace(/\/$/, '')
+const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
+const BASE = (process.env.BASE_URL || (vercel && `https://${vercel}`) || 'http://localhost:5199')
+  .replace(/\/$/, '')
 const exhibits = JSON.parse(fs.readFileSync('data/exhibits-ar.json', 'utf8'))
 fs.mkdirSync('qr', { recursive: true })
 
